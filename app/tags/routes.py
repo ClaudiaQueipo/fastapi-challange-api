@@ -5,8 +5,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dependencies import get_current_user
 from app.auth.models import User
-from app.auth.services import get_current_user
 from app.core.db import async_session
 from app.core.exceptions import PermissionDeniedError
 from app.core.schemas import PaginatedResponse
