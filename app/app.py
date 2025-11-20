@@ -15,7 +15,8 @@ from app.core.exceptions import (
     ResourceNotFoundError,
 )
 from app.core.settings import settings
-from app.posts.routes import router
+from app.posts.routes import router as posts_router
+from app.tags.routes import router as tags_router
 
 
 def create_app() -> FastAPI:
@@ -39,7 +40,8 @@ def create_app() -> FastAPI:
     app.add_exception_handler(AuthenticationFailedError, auth_failed_handler)
     app.add_exception_handler(Exception, global_exception_handler)
 
-    app.include_router(router, prefix=settings.API_V1_PREFIX)
+    app.include_router(posts_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(tags_router, prefix=settings.API_V1_PREFIX)
 
     @app.get("/")
     async def root():
