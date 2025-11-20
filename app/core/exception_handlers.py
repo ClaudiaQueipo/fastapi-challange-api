@@ -36,8 +36,14 @@ def auth_failed_handler(_request: Request, exc: AuthenticationFailedError):
     )
 
 
-def global_exception_handler(_request: Request, _exc: Exception):
+def global_exception_handler(_request: Request, exc: Exception):
     # TODO: Add a log here when the logger instance is configured
+
+    if isinstance(exc, OSError) and "Connect call failed" in str(exc):
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"detail": "Database service unavailable."},
+        )
 
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
