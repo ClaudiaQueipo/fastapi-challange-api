@@ -25,5 +25,12 @@ class Settings(BaseSettings):
 
     BACKEND_CORS_ORIGINS: list[str] = Field(default=["http://localhost:3000"])
 
+    POSTGRES_DB: str = Field(default="fastapi_challenge")
+    POSTGRES_USER: str = Field(default="cqdev")
+    POSTGRES_PASSWORD: str = Field(...)
+    POSTGRES_HOST: str = Field(default="localhost")
+    POSTGRES_PORT: int = Field(default=5432)
+    DATABASE_URL: str = Field(...)
+
 
 settings = Settings()
