@@ -1,6 +1,11 @@
-def main():
-    print("Hello from fastapi-challange-api!")
+import uvicorn
 
+from app.core.settings import settings
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run(
+        "app.app:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.DEBUG,
+    )

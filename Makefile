@@ -1,4 +1,4 @@
-.PHONY: sync install-hooks format lint check pre-commit clean setup
+.PHONY: sync install-hooks format lint check pre-commit clean setup dev docker-up docker-down docker-logs docker-build docker-rebuild
 
 sync:
 	uv sync --extra dev
@@ -34,3 +34,22 @@ clean:
 
 setup: sync install-hooks
 	@echo "Project setup completed"
+
+dev:
+	uv run uvicorn app.app:app --host 0.0.0.0 --port 8000 --reload
+
+compose-up:
+	docker-compose up -d
+
+compose-down:
+	docker-compose down
+
+docker-logs:
+	docker-compose logs -f api
+
+docker-build:
+	docker-compose up --build
+
+docker-rebuild:
+	docker-compose build --no-cache
+	docker-compose up -d
