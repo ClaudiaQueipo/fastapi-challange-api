@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.auth.routes import router as auth_router
 from app.core.exception_handlers import (
     auth_failed_handler,
     global_exception_handler,
@@ -40,6 +41,7 @@ def create_app() -> FastAPI:
     app.add_exception_handler(AuthenticationFailedError, auth_failed_handler)
     app.add_exception_handler(Exception, global_exception_handler)
 
+    app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
     app.include_router(posts_router, prefix=settings.API_V1_PREFIX)
     app.include_router(tags_router, prefix=settings.API_V1_PREFIX)
 

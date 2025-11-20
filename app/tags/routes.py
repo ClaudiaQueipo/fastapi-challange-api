@@ -5,7 +5,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models import User
+from app.auth.services import get_current_user
 from app.core.db import async_session
+from app.core.exceptions import PermissionDeniedError
 from app.tags.schemas import CreateTag, TagResponse, UpdateTag
 from app.tags.services import TagService
 
@@ -20,10 +23,11 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 @router.post("", response_model=TagResponse, status_code=201)
 async def create_tag(
     tag_data: CreateTag,
+    current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> TagResponse:
     service = TagService(session)
-    tag = await service.create_tag(tag_data)
+    tag = await service.create_tag(tag_data, current_user.entity_id)
     return TagResponse.model_validate(tag)
 
 
@@ -53,9 +57,13 @@ async def get_tag(
 async def update_tag(
     entity_id: UUID,
     update_data: UpdateTag,
+    current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> TagResponse:
     service = TagService(session)
+    tag = await service.get_tag(entity_id)
+    if tag.user_id != current_user.entity_id:
+        raise PermissionDeniedError("Not authorized")
     tag = await service.update_tag(entity_id, update_data)
     return TagResponse.model_validate(tag)
 
@@ -63,7 +71,11 @@ async def update_tag(
 @router.delete("/{entity_id}", status_code=204)
 async def delete_tag(
     entity_id: UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> None:
     service = TagService(session)
+    tag = await service.get_tag(entity_id)
+    if tag.user_id != current_user.entity_id:
+        raise PermissionDeniedError("Not authorized")
     await service.delete_tag(entity_id)

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.auth.models import User
 from app.core.mixins import CRUDMixin
 from app.posts.models import Post
 from app.posts.schemas import CreatePost, UpdatePost
@@ -14,8 +15,14 @@ class PostService(CRUDMixin):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def create_post(self, post_data: CreatePost) -> Post:
-        post = Post(**post_data.model_dump(exclude={"tags"}))
+    async def create_post(self, post_data: CreatePost, user_id: UUID) -> Post:
+        # Get current user
+        result = await self.session.execute(
+            select(User).where(User.entity_id == user_id)
+        )
+        current_user = result.scalar_one()
+
+        post = Post(**post_data.model_dump(exclude={"tags"}), user_id=user_id)
         post = await self.create(post)
         if post_data.tags:
             result = await self.session.execute(
@@ -24,14 +31,16 @@ class PostService(CRUDMixin):
                 .where(Tag.is_deleted == False)  # noqa: E712
             )
             post.tags = result.scalars().all()
-            await self.session.commit()
-            await self.session.refresh(post)
+        await self.session.commit()
+        await self.session.refresh(post)
+
+        post.user = current_user
         return post
 
     async def get_post(self, entity_id: UUID) -> Post:
         stmt = (
             select(Post)
-            .options(selectinload(Post.tags))
+            .options(selectinload(Post.tags), selectinload(Post.user))
             .where(Post.entity_id == entity_id)
         )
         result = await self.session.execute(stmt)
@@ -65,7 +74,7 @@ class PostService(CRUDMixin):
     async def list_posts(
         self, page: int = 1, size: int = 10, only_deleted: bool = False
     ) -> list[Post]:
-        stmt = select(Post).options(selectinload(Post.tags))
+        stmt = select(Post).options(selectinload(Post.tags), selectinload(Post.user))
         if only_deleted:
             stmt = stmt.where(Post.is_deleted)
         else:
