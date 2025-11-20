@@ -1,18 +1,15 @@
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, Any
+from typing import Any
 from uuid import UUID
 
 import bcrypt
 import jwt
-from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
 from app.auth.schemas import UserCreate, UserLogin
-from app.core.db import async_session
-from app.core.exceptions import AuthenticationFailedError
 from app.core.settings import settings
 
 bearer_scheme = HTTPBearer()
@@ -79,26 +76,3 @@ class AuthService:
             to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
         )
         return encoded_jwt
-
-
-async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
-) -> User:
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise AuthenticationFailedError(INVALID_CREDENTIALS_MESSAGE)
-        user_uuid = UUID(user_id)
-    except jwt.PyJWTError:
-        raise AuthenticationFailedError(INVALID_CREDENTIALS_MESSAGE) from None
-
-    async with async_session() as session:
-        auth_service = AuthService(session)
-        user = await auth_service.get_user_by_id(user_uuid)
-        if user is None:
-            raise AuthenticationFailedError(INVALID_CREDENTIALS_MESSAGE)
-    return user
