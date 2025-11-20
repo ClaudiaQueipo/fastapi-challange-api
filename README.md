@@ -39,6 +39,7 @@ Use Bearer token for protected endpoints. Only owners manage their resources.
 - Migrations: `make migrate msg="..."` then `make upgrade`.
 
 ## Deployment
+```
 fastapi-challenge-api/
 ├── app/
 │   ├── core/                    # Shared application components
