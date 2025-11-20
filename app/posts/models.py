@@ -11,6 +11,7 @@ from app.core.db import Base
 from app.core.mixins import SoftDeleteMixin, TimestampMixin
 
 if TYPE_CHECKING:
+    from app.auth.models import User
     from app.tags.models import Tag
 
 post_tags = Table(
@@ -29,8 +30,10 @@ class Post(Base, TimestampMixin, SoftDeleteMixin):
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    author_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    author_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    user_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.entity_id"), nullable=False
+    )
+    user: Mapped[User] = relationship("User", back_populates="posts")
     tags: Mapped[list[Tag]] = relationship(
         "Tag", secondary=post_tags, back_populates="posts"
     )

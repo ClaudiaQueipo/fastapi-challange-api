@@ -11,8 +11,8 @@ class TagService(CRUDMixin):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def create_tag(self, tag_data: CreateTag) -> Tag:
-        tag = Tag(**tag_data.model_dump())
+    async def create_tag(self, tag_data: CreateTag, user_id: UUID) -> Tag:
+        tag = Tag(**tag_data.model_dump(), user_id=user_id)
         return await self.create(tag)
 
     async def get_tag(self, entity_id: UUID) -> Tag:
