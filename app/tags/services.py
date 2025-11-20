@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.mixins import CRUDMixin
@@ -29,5 +30,13 @@ class TagService(CRUDMixin):
 
     async def list_tags(
         self, page: int = 1, size: int = 10, only_deleted: bool = False
-    ) -> list[Tag]:
-        return await self.list_paginated(Tag, page, size, only_deleted)
+    ) -> tuple[list[Tag], int]:
+        tags = await self.list_paginated(Tag, page, size, only_deleted)
+        count_stmt = select(func.count(Tag.entity_id))
+        if only_deleted:
+            count_stmt = count_stmt.where(Tag.is_deleted)
+        else:
+            count_stmt = count_stmt.where(Tag.is_deleted == False)  # noqa: E712
+        count_result = await self.session.execute(count_stmt)
+        total = count_result.scalar()
+        return tags, total
