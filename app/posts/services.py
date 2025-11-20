@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -73,15 +73,24 @@ class PostService(CRUDMixin):
 
     async def list_posts(
         self, page: int = 1, size: int = 10, only_deleted: bool = False
-    ) -> list[Post]:
+    ) -> tuple[list[Post], int]:
         stmt = select(Post).options(selectinload(Post.tags), selectinload(Post.user))
         if only_deleted:
             stmt = stmt.where(Post.is_deleted)
         else:
             stmt = stmt.where(Post.is_deleted == False)  # noqa: E712
-        stmt = stmt.offset((page - 1) * size).limit(size)
-        result = await self.session.execute(stmt)
+        paginated_stmt = stmt.offset((page - 1) * size).limit(size)
+        result = await self.session.execute(paginated_stmt)
         posts = result.scalars().all()
         for post in posts:
             post.tags = [tag for tag in post.tags if not tag.is_deleted]
-        return posts
+
+        count_stmt = select(func.count(Post.entity_id))
+        if only_deleted:
+            count_stmt = count_stmt.where(Post.is_deleted)
+        else:
+            count_stmt = count_stmt.where(Post.is_deleted == False)  # noqa: E712
+        count_result = await self.session.execute(count_stmt)
+        total = count_result.scalar()
+
+        return posts, total

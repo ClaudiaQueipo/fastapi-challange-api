@@ -13,3 +13,8 @@ class TimestampSchema(BaseModel):
 class SoftDeleteSchema(BaseModel):
     is_deleted: bool
     deleted_at: datetime | None = None
+
+
+class PaginatedResponse[T](BaseModel):
+    items: list[T]
+    total: int

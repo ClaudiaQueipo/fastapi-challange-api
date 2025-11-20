@@ -11,6 +11,7 @@ from app.auth.models import User
 from app.auth.services import get_current_user
 from app.core.db import async_session
 from app.core.exceptions import PermissionDeniedError
+from app.core.schemas import PaginatedResponse
 from app.posts.models import Post
 from app.posts.schemas import CreatePost, PostResponse, UpdatePost
 from app.posts.services import PostService
@@ -41,16 +42,18 @@ async def create_post(
     return PostResponse.model_validate(post)
 
 
-@router.get("", response_model=list[PostResponse], status_code=200)
+@router.get("", response_model=PaginatedResponse[PostResponse], status_code=200)
 async def list_posts(
     session: Annotated[AsyncSession, Depends(get_session)],
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1, le=100)] = 10,
     only_deleted: Annotated[bool, Query()] = False,
-) -> list[PostResponse]:
+) -> PaginatedResponse[PostResponse]:
     service = PostService(session)
-    posts = await service.list_posts(page, size, only_deleted)
-    return [PostResponse.model_validate(post) for post in posts]
+    posts, total = await service.list_posts(page, size, only_deleted)
+    return PaginatedResponse(
+        items=[PostResponse.model_validate(post) for post in posts], total=total
+    )
 
 
 @router.get("/{entity_id}", response_model=PostResponse, status_code=200)

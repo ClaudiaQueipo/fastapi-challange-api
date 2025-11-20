@@ -9,6 +9,7 @@ from app.auth.models import User
 from app.auth.services import get_current_user
 from app.core.db import async_session
 from app.core.exceptions import PermissionDeniedError
+from app.core.schemas import PaginatedResponse
 from app.tags.schemas import CreateTag, TagResponse, UpdateTag
 from app.tags.services import TagService
 
@@ -31,16 +32,18 @@ async def create_tag(
     return TagResponse.model_validate(tag)
 
 
-@router.get("", response_model=list[TagResponse], status_code=200)
+@router.get("", response_model=PaginatedResponse[TagResponse], status_code=200)
 async def list_tags(
     session: Annotated[AsyncSession, Depends(get_session)],
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1, le=100)] = 10,
     only_deleted: Annotated[bool, Query()] = False,
-) -> list[TagResponse]:
+) -> PaginatedResponse[TagResponse]:
     service = TagService(session)
-    tags = await service.list_tags(page, size, only_deleted)
-    return [TagResponse.model_validate(tag) for tag in tags]
+    tags, total = await service.list_tags(page, size, only_deleted)
+    return PaginatedResponse(
+        items=[TagResponse.model_validate(tag) for tag in tags], total=total
+    )
 
 
 @router.get("/{entity_id}", response_model=TagResponse, status_code=200)
