@@ -1,4 +1,4 @@
-.PHONY: sync install-hooks format lint check pre-commit clean setup dev docker-up docker-down docker-logs docker-build docker-rebuild
+.PHONY: sync install-hooks format lint check pre-commit clean setup dev compose-up compose-down docker-logs docker-build docker-rebuild
 
 sync:
 	uv sync --extra dev
