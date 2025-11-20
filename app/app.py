@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,12 +17,14 @@ from app.core.exceptions import (
     ResourceAlreadyExistsError,
     ResourceNotFoundError,
 )
+from app.core.middleware import ResponseTimeMiddleware
 from app.core.settings import settings
 from app.posts.routes import router as posts_router
 from app.tags.routes import router as tags_router
 
 
 def create_app() -> FastAPI:
+    logging.basicConfig(level=logging.INFO)
     app = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
@@ -34,6 +38,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    app.add_middleware(ResponseTimeMiddleware)
 
     app.add_exception_handler(ResourceNotFoundError, resource_not_found_handler)
     app.add_exception_handler(ResourceAlreadyExistsError, resource_exists_handler)
