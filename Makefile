@@ -39,7 +39,7 @@ dev:
 	uv run uvicorn app.app:app --host 0.0.0.0 --port 8000 --reload
 
 compose-up:
-	docker-compose up -d
+	COMPOSE_BAKE=true docker-compose up -d
 
 compose-down:
 	docker-compose down
@@ -53,3 +53,18 @@ docker-build:
 docker-rebuild:
 	docker-compose build --no-cache
 	docker-compose up -d
+
+migrate:
+	uv run alembic revision --autogenerate -m "$(msg)"
+
+upgrade:
+	uv run alembic upgrade head
+
+downgrade:
+	uv run alembic downgrade -1
+
+current:
+	uv run alembic current
+
+history:
+	uv run alembic history

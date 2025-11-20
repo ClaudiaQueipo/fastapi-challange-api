@@ -12,15 +12,12 @@ services:
       - "8000:8000"
 
     volumes:
-      - .:/app
-      - /app/.venv
+      - ./app:/app/app
 
     env_file:
       - .env
 
-    environment:
-      - ENVIRONMENT=development
-      - DEBUG=True
+
 
     restart: unless-stopped
 
