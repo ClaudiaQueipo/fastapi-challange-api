@@ -6,7 +6,6 @@ A simple API for managing posts and tags with user authentication.
 - uv installed.
 - make for easy commands.
 - Docker and Docker Compose for deployment.
-- PostgreSQL as database.
 
 ## Architecture
 The project follows modular architecture principles, with each feature in its own module (auth, posts, tags). Core has shared utilities.
@@ -67,12 +66,12 @@ fastapi-challenge-api/
 │       ├── schemas.py           # Tag schemas
 │       └── services.py          # Tag business logic
 │   ├── app.py                   # FastAPI app configuration
-│   └── main.py                  # Entry point
 ├── migrations/                  # Alembic database migrations
 ├── pyproject.toml               # Project dependencies and config
 ├── uv.lock                      # Dependency lock file
 ├── Dockerfile                   # Docker image definition
 ├── docker-compose.yml           # Multi-container setup
+├── main.py                      # main python file for run app
 ├── Makefile                     # Automation scripts
 ├── .env.example                 # Environment variables template
 └── README.md                    # This file
